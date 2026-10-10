@@ -1,0 +1,44 @@
+[submodule ".oh-my-zsh"]
+	path = .oh-my-zsh
+	url = https://github.com/ohmyzsh/ohmyzsh.git
+	branch = master
+[submodule ".tmux"]
+	path = .tmux
+	url = https://github.com/gpakosz/.tmux.git
+	branch = master
+[submodule ".vim/bundle/vim-fugitive"]
+	path = .vim/bundle/vim-fugitive
+	url = https://github.com/tpope/vim-fugitive.git
+	branch = master
+[submodule ".vim/bundle/vim-go"]
+	path = .vim/bundle/vim-go
+	url = https://github.com/fatih/vim-go.git
+	branch = master
+[submodule ".vim/bundle/vim-medic_chalk"]
+	path = .vim/bundle/vim-medic_chalk
+	url = https://github.com/ParamagicDev/vim-medic_chalk.git
+	branch = master
+[submodule ".vim/bundle/vim-tmux-navigator"]
+	path = .vim/bundle/vim-tmux-navigator
+	url = https://github.com/christoomey/vim-tmux-navigator.git
+	branch = master
+[submodule ".vim/bundle/Vundle.vim"]
+	path = .vim/bundle/Vundle.vim
+	url = https://github.com/VundleVim/Vundle.vim.git
+	branch = master
+[submodule "zsh-custom/plugins/zsh-autosuggestions"]
+	path = zsh-custom/plugins/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions
+	branch = master
+[submodule "zsh-custom/plugins/zsh-completion-generator"]
+	path = zsh-custom/plugins/zsh-completion-generator
+	url = https://github.com/RobSis/zsh-completion-generator.git
+	branch = master
+[submodule "zsh-custom/plugins/fast-syntax-highlighting"]
+	path = zsh-custom/plugins/fast-syntax-highlighting
+	url = https://github.com/zdharma-continuum/fast-syntax-highlighting.git
+	branch = master
+[submodule "zsh-custom/plugins/zsh-completions"]
+	path = zsh-custom/plugins/zsh-completions
+	url = https://github.com/zsh-users/zsh-completions.git
+	branch = master

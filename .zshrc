@@ -1,0 +1,72 @@
+#!/bin/zsh
+# location of this repo, found by resolving the ~/.zshrc symlink
+SHELLENV=${${(%):-%x}:A:h}
+
+setopt EXTENDED_GLOB
+export ZSH=$SHELLENV/.oh-my-zsh
+export ZSH_CUSTOM=$SHELLENV/zsh-custom
+export EDITOR=/usr/bin/vim
+export VISUAL=/usr/bin/vim
+
+# oh-my-zsh is a git submodule: update it with `git submodule update --remote`
+zstyle ':omz:update' mode disabled
+
+ZSH_THEME="evan"
+plugins=(alias-finder zsh-navigation-tools themes battery common-aliases z sudo history zsh-autosuggestions colored-man-pages colorize fast-syntax-highlighting zsh-completion-generator globalias)
+
+# add omz plugin if binary found in $PATH
+add_plugin() {
+    if (( $+commands[$1] )); then
+        plugins+=("$1")
+    fi
+}
+
+# add plugins when required binary found
+if (( $+commands[tmux] )); then plugins+=(tmux tmux-theme); fi
+if (( $+commands[systemctl] )); then plugins+=(systemd); fi
+if (( $+commands[apt] )); then plugins+=(debian); fi
+add_plugin yum
+add_plugin git
+add_plugin docker
+
+# zsh-completions only provides completion functions: it must be on fpath
+# before oh-my-zsh runs compinit, rather than being loaded as a plugin
+fpath+=($ZSH_CUSTOM/plugins/zsh-completions/src)
+
+# load oh-my-zsh
+source $ZSH/oh-my-zsh.sh
+
+# GNU ls (Linux) supports more options than BSD ls (macOS)
+if ls --version &>/dev/null; then
+    alias ls='ls --color=auto --group-directories-first --file-type'
+else
+    alias ls='ls -G -F'
+fi
+
+if [[ -f $SHELLENV/.zsh_functions ]]; then
+	. $SHELLENV/.zsh_functions
+fi
+
+if [[ -f $SHELLENV/.zsh_aliases ]]; then
+	. $SHELLENV/.zsh_aliases
+fi
+
+# go-related
+export GOPRIVATE=gitlab.percipia.com
+export GOPATH=$HOME/go
+
+autoload -Uz predict-on zmv zed zcalc
+
+# don't override TERM inside tmux (it sets its own); only upgrade a bare xterm
+if [[ -z $TMUX && $TERM == xterm ]]; then
+	export TERM=xterm-256color
+fi
+
+# add bin/tools to path for freedom & ptce servers
+hostn=${HOST%%.*}
+if [[ "$hostn" =~ (ptce|freedom) ]]; then
+	export PATH=$PATH:/sbin:/usr/sbin:$HOME/bin:/usr/local/go/bin:/$hostn/bin:/$hostn/tools
+else
+	export PATH=$PATH:/sbin:/usr/sbin:$HOME/bin:/usr/local/go/bin
+fi
+typeset -U path

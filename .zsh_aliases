@@ -1,0 +1,95 @@
+#!/bin/zsh
+alias chx='chmod 755'
+alias cl=clear
+alias cp='cp -iv'
+alias j='jobs -l'
+alias lc='ls -ltcr'
+alias l='ls -gGh'
+alias lr='ll -tR'
+alias lta='ls -ltAr'
+alias lt='ls -ltr'
+alias ltt='ls -lt'
+alias lu='ls -ltur'
+alias lx='ls -lXB'
+alias mv='mv -iv'
+alias naliases=n-aliases
+alias ncd=n-cd
+alias nenv=n-env
+alias nfunctions=n-functions
+alias nhelp=n-help
+alias nhistory=n-history
+alias nkill=n-kill
+alias noptions=n-options
+alias npanelize=n-panelize
+alias po=popd
+alias pu=pushd
+alias rmdir='rm -rfv'
+alias sgrep='grep -n -H -C 5 --exclude-dir={.git,.svn,CVS}'
+alias soursh='source ~/.zshrc'
+alias tad='tmux attach -d -t'
+alias ta='tmux attach -t'
+alias tkss='tmux kill-session -t'
+alias tksv='tmux kill-server'
+alias tl='tmux list-sessions'
+alias tree='tree -CDuh'
+alias trl='tr "[:upper:]" "[:lower:]"'
+alias tru='tr "[:lower:]" "[:upper:]"'
+alias ts='tmux new-session -s'
+alias ungz=gunzip
+alias vimrc='vim ~/.vimrc'
+alias whereami=display_info
+alias where='type -a'
+alias which='type -a'
+alias zshrc='$EDITOR ~/.zshrc'
+# VIM ALIASES
+alias vrc='vim ~/.zshrc'
+alias valias='vim ~/.zsh_aliases'
+alias vfunc='vim ~/.zsh_functions'
+# APT ALIASES
+alias aptin='sudo apt-get -y install'
+alias aptup='sudo apt-get update'
+alias aptupup='sudo apt-get update && sudo apt-get upgrade'
+alias aptinfo='sudo apt info'
+alias aptshow='sudo apt show'
+alias apts='sudo apt search'
+alias aptss='sudo apt search all'
+alias vmux='vim ~/.tmux.conf'
+alias vmuxl='vim ~/.tmux.conf.local'
+# TMUX ALIASES
+alias tso='tmux source-file'
+alias tmuxtheme='zsh $HOME/bin/tmux-theme-chooser'
+# GLOBAL
+alias -g RNS='| sort -nr'
+alias -g VLA=/var/log/asterisk/full
+alias -g VM=/var/log/messages
+alias -g NGA=/var/log/nginx/access.log
+alias -g NGE=/var/log/nginx/error.log
+alias -g FSL=/var/log/freeswitch/freeswitch.log
+# PTCE ALIASES
+if [ ! -f "/usr/lib/systemd/system/ptceweb.service" ]; then
+	alias ptcerbt='/ptce/bin/ptce stop 2>/dev/null; systemctl restart jboss; sleep 3; /ptce/bin/ptce start 2>/dev/null'
+else
+	alias ptcerbt='/ptce/bin/ptce stop 2>/dev/null; systemctl restart ptceweb; sleep 3; /ptce/bin/ptce start 2>/dev/null'
+fi
+alias rm='rm -iv'
+alias cdp='cd ~/documents/percipia'
+alias tm=tmux
+# EDIT OMZ THEME
+_theme_file() { local f=$ZSH_CUSTOM/themes/$ZSH_THEME.zsh-theme; [[ -f $f ]] || f=$ZSH/themes/$ZSH_THEME.zsh-theme; print -r -- $f }
+alias et='vim $(_theme_file)'
+alias st='source $(_theme_file)'
+# create alias if my.cnf file exists
+_hostname=${HOST%%.*}
+if [ -f "$HOME/documents/$_hostname.cnf" ]; then
+	if [[ "$_hostname" =~ freedom ]]; then
+		alias my="mysql --defaults-extra-file=~/documents/$_hostname.cnf asterisk"
+		alias myd="mysqldump --defaults-extra-file=~/documents/$_hostname.cnf asterisk"
+		alias mycdr="mysql --defaults-extra-file=~/documents/$_hostname.cnf asteriskcdrdb"
+		alias mycdrd="mysqldump --defaults-extra-file=~/documents/$_hostname.cnf asteriskcdrdb"
+	elif [[ "$_hostname" =~ ptce ]]; then
+		alias my="mysql --defaults-extra-file=~/documents/$_hostname.cnf ptceDB"
+		alias myd="mysqldump --defaults-extra-file=~/documents/$_hostname.cnf ptceDB"
+	fi
+fi
+# stash away (discard) current changes; drops only that stash, not the whole list
+alias gsss='git stash && git stash drop'
