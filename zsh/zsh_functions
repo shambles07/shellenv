@@ -197,7 +197,7 @@ EOF
 
     chmod 600 "$cnf"
     # (re)load aliases so my/myd pick up the new file
-    source "$SHELLENV/.zsh_aliases"
+    source "$SHELLENV/zsh/zsh_aliases"
 	# view aliases
     alias my
     alias myd

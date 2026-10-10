@@ -6,24 +6,40 @@ zsh / oh-my-zsh, tmux (Oh my tmux!) and vim configuration.
 
 ```sh
 git clone --recurse-submodules <url> ~/shellenv
-~/shellenv/install.sh     # symlinks the dotfiles into $HOME
+~/shellenv/install.sh
 ```
+
+`install.sh` only creates these links in `$HOME`; everything else is loaded
+straight from the repo. Anything already at one of these paths is renamed to
+`<name>.orig.<timestamp>`, never deleted.
+
+| `$HOME`             | repo                                     |
+| ------------------- | ---------------------------------------- |
+| `~/.zshrc`          | `zsh/zshrc`                              |
+| `~/.vimrc`          | `.vimrc`                                 |
+| `~/.vim`            | `.vim`                                   |
+| `~/.tmux.conf`      | `.tmux.conf` (links to `.tmux/.tmux.conf`) |
+| `~/.tmux.conf.local`| `.tmux.conf.local`                       |
 
 ## Layout
 
 Third-party code is pulled in as git submodules and never edited in place;
 all local customizations live in tracked files outside them:
 
-| Upstream (submodule)            | Customize in                                          |
-| ------------------------------- | ----------------------------------------------------- |
-| `.oh-my-zsh`                    | `.zshrc`, `zsh-custom/` (`$ZSH_CUSTOM`)               |
-| `.tmux` (gpakosz/.tmux)         | `.tmux.conf.local` (`.tmux.conf` links into the submodule) |
-| `zsh-custom/plugins/*` (3rd party) | `zsh-custom/overrides.zsh`                         |
-| `.vim/bundle/*`                 | `.vimrc`                                              |
+| Upstream (submodule)               | Customize in                                |
+| ---------------------------------- | ------------------------------------------- |
+| `.oh-my-zsh`                       | `zsh/zshrc`, `zsh-custom/` (`$ZSH_CUSTOM`)  |
+| `zsh-custom/plugins/*` (3rd party) | `zsh-custom/overrides.zsh`                  |
+| `.tmux` (gpakosz/.tmux)            | `.tmux.conf.local`                          |
+| `.vim/bundle/*`                    | `.vimrc`                                    |
 
+- `zsh/` – `zshrc`, `zsh_aliases`, `zsh_functions`
 - `zsh-custom/overrides.zsh` – tweaks to oh-my-zsh plugins (sourced after plugins load)
 - `zsh-custom/themes/` – theme wrappers that source the upstream theme, then adjust it
 - `zsh-custom/plugins/{nginx,tmux-theme}` – local plugins
+- `.tmux.conf.local` – loads the upstream template from `.tmux/.tmux.conf.local`,
+  then applies only the local settings, so new upstream options arrive with updates
+- `.vimrc` – Vundle plugins are only registered when their directory exists
 
 ## Updating
 
@@ -34,6 +50,3 @@ git commit -am "Update submodules"
 ```
 
 On other machines: `git pull && git submodule update --init --recursive`.
-
-After an Oh my tmux! update, compare `.tmux/.tmux.conf.local` against
-`.tmux.conf.local` for newly added options (`git diff --no-index`).

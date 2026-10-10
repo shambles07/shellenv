@@ -1,6 +1,6 @@
 #!/bin/zsh
-# location of this repo, found by resolving the ~/.zshrc symlink
-SHELLENV=${${(%):-%x}:A:h}
+# location of this repo, found by resolving the ~/.zshrc symlink (to zsh/zshrc)
+SHELLENV=${${(%):-%x}:A:h:h}
 
 setopt EXTENDED_GLOB
 export ZSH=$SHELLENV/.oh-my-zsh
@@ -43,12 +43,12 @@ else
     alias ls='ls -G -F'
 fi
 
-if [[ -f $SHELLENV/.zsh_functions ]]; then
-	. $SHELLENV/.zsh_functions
+if [[ -f $SHELLENV/zsh/zsh_functions ]]; then
+	. $SHELLENV/zsh/zsh_functions
 fi
 
-if [[ -f $SHELLENV/.zsh_aliases ]]; then
-	. $SHELLENV/.zsh_aliases
+if [[ -f $SHELLENV/zsh/zsh_aliases ]]; then
+	. $SHELLENV/zsh/zsh_aliases
 fi
 
 # go-related

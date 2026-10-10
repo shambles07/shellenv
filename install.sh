@@ -1,21 +1,41 @@
 #!/bin/sh
 # Link the shellenv dotfiles into $HOME.
-# Existing files (not already pointing here) are moved aside to <name>.pre-shellenv.
+#
+# Only these entry points are linked; everything else is loaded from the repo:
+#   ~/.zshrc            -> zsh/zshrc
+#   ~/.vimrc            -> .vimrc
+#   ~/.vim              -> .vim
+#   ~/.tmux.conf        -> .tmux.conf (-> .tmux/.tmux.conf)
+#   ~/.tmux.conf.local  -> .tmux.conf.local
+#
+# Anything already at one of those paths (that isn't already our link) is
+# renamed to <name>.orig.<timestamp>, never deleted.
 set -eu
 
 SHELLENV=$(cd "$(dirname "$0")" && pwd)
+STAMP=$(date +%Y%m%d_%H%M%S)
 
+echo "==> updating submodules"
 git -C "$SHELLENV" submodule update --init --recursive
 
-for f in .zshrc .zsh_aliases .zsh_functions .vimrc .vim .tmux.conf .tmux.conf.local; do
-    target=$HOME/$f
-    if [ "$(readlink "$target" 2>/dev/null)" = "$SHELLENV/$f" ]; then
+echo "==> linking dotfiles into $HOME"
+for pair in \
+    zsh/zshrc:.zshrc \
+    .vimrc:.vimrc \
+    .vim:.vim \
+    .tmux.conf:.tmux.conf \
+    .tmux.conf.local:.tmux.conf.local
+do
+    src=$SHELLENV/${pair%%:*}
+    target=$HOME/${pair#*:}
+    if [ "$(readlink "$target" 2>/dev/null)" = "$src" ]; then
+        echo "already linked: $target -> $src"
         continue
     fi
     if [ -e "$target" ] || [ -L "$target" ]; then
-        mv "$target" "$target.pre-shellenv"
-        echo "moved $target -> $target.pre-shellenv"
+        mv -v "$target" "$target.orig.$STAMP"
     fi
-    ln -s "$SHELLENV/$f" "$target"
-    echo "linked $target -> $SHELLENV/$f"
+    ln -sv "$src" "$target"
 done
+
+echo "==> done; start a new shell (or run: exec zsh)"

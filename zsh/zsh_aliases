@@ -43,8 +43,8 @@ alias which='type -a'
 alias zshrc='$EDITOR ~/.zshrc'
 # VIM ALIASES
 alias vrc='vim ~/.zshrc'
-alias valias='vim ~/.zsh_aliases'
-alias vfunc='vim ~/.zsh_functions'
+alias valias='vim $SHELLENV/zsh/zsh_aliases'
+alias vfunc='vim $SHELLENV/zsh/zsh_functions'
 # APT ALIASES
 alias aptin='sudo apt-get -y install'
 alias aptup='sudo apt-get update'

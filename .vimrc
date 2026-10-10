@@ -2,16 +2,28 @@
 set nocompatible
 syntax on
 filetype off
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-        Plugin 'VundleVim/Vundle.vim'
-        Plugin 'ParamagicDev/vim-medic_chalk'
-		Plugin 'christoomey/vim-tmux-navigator'
-call vundle#end()
+" plugins are git submodules in ~/.vim/bundle: only load the ones checked out
+let s:bundle = expand('~/.vim/bundle')
+if isdirectory(s:bundle . '/Vundle.vim')
+	let &rtp .= ',' . s:bundle . '/Vundle.vim'
+	call vundle#begin(s:bundle)
+	for s:plugin in [
+		\ 'VundleVim/Vundle.vim',
+		\ 'ParamagicDev/vim-medic_chalk',
+		\ 'christoomey/vim-tmux-navigator',
+		\ 'tpope/vim-fugitive',
+		\ 'fatih/vim-go',
+		\ ]
+		if isdirectory(s:bundle . '/' . fnamemodify(s:plugin, ':t'))
+			execute 'Plugin' string(s:plugin)
+		endif
+	endfor
+	call vundle#end()
+endif
 filetype plugin indent on
 
 " Custom Settings
-colorscheme medic_chalk
+silent! colorscheme medic_chalk
 set nu
 set sw=4
 set tabstop=4
