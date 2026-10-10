@@ -143,30 +143,19 @@ mycnf() {
             return 0
         fi
     fi
-    case "$hostname" in
-        fre[eq]*)
-            db=asterisk
-            pass=REDACTED
-        ;;
-        ptce*)
-            db=ptceDB
-            # check parallax version using same version used by /ptce/bin/ptce
-            MAJOR_VERSION=$(grep -Po '(?<=PTCE_VERSION_NUMBER=)(.*)' /ptce/config/ptceproperties.config | cut -d' ' -f1 | cut -d. -f1 | cut -d'v' -f1)
-            if [[ "$MAJOR_VERSION" -ge 17 ]]; then
-                pass=REDACTED
-            else
-                pass=REDACTED
-            fi
-        ;;
-        # unable to check version
-        *)
-            print "Hostname does not match the standard Frequency/Parallax format, unable to automatically set password"
-            read "pass?Input MySQL db password: "
-        ;;
-    esac
-    if [ -z "$db" ]; then
-        read "db?Input MySQL db name: "
+    # determine system by whether file ptceproperties.config/freedomproperties.config exists
+    if [[ -f /freedom/config/freedomproperties.config ]]; then
+        db=asterisk
+        pass="$(grep -Po '(?<=DB_PASSWORD=)(.*)' /freedom/config/freedomproperties.config)"
+    elif [[ -f /ptce/config/ptceproperties.config ]]; then
+        db=ptceDB
+        pass="$(grep -Po '(?<=DB_PASSWORD=)(.*)' /ptce/config/ptceproperties.config)"
+    else
+        print "Hostname does not match the standard Frequency/Parallax format, unable to automatically set password"
+        read -r "pass?Input MariaDB/MySQL DB password: "
+        read -r "db?Input MariaDB/MySQL DB name: "
     fi
+
     ( umask 077; cat > "$cnf" ) << EOF
 [client]
 user=percipia
@@ -187,6 +176,7 @@ hex-blob
 compact
 skip-extended-insert
 EOF
+
     # ! grep -q 'alias my='  ~/.zsh_aliases && sed -i '/alias my=/d'  ~/.zsh_aliases
     # ! grep -q 'alias myd=' ~/.zsh_aliases && sed -i '/alias myd=/d' ~/.zsh_aliases
     # printf "alias my='mysql --defaults-extra-file=\$HOME/documents/%s.cnf %s'\n" "$hostname" "$db" >> ~/.zsh_aliases
