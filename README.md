@@ -35,11 +35,18 @@ all local customizations live in tracked files outside them:
 
 - `zsh/` – `zshrc`, `zsh_aliases`, `zsh_functions`
 - `zsh-custom/overrides.zsh` – tweaks to oh-my-zsh plugins (sourced after plugins load)
+- `zsh-custom/completions/` – completions, e.g. `fast-theme <Tab>` lists fast-syntax-highlighting themes
 - `zsh-custom/themes/` – theme wrappers that source the upstream theme, then adjust it
 - `zsh-custom/plugins/{nginx,tmux-theme}` – local plugins
 - `.tmux.conf.local` – loads the upstream template from `.tmux/.tmux.conf.local`,
   then applies only the local settings, so new upstream options arrive with updates
 - `.vimrc` – Vundle plugins are only registered when their directory exists
+
+## Archive
+
+`./archive.sh` writes `shellenv.tar.gz` (git-ignored) to the repo root: the
+entire repo, including submodules, hidden files and `.git`, under a single
+top-level `shellenv/` directory.
 
 ## Updating
 

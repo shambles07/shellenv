@@ -1,0 +1,71 @@
+#compdef fast-theme
+# Completion for fast-syntax-highlighting's `fast-theme`, used in place of the
+# plugin's own _fast-theme (registered in overrides.zsh). The shipped one globs
+# $FAST_WORK_DIR/themes, which is the cache directory, so it never offers any
+# themes.
+#
+# Themes are read from disk on every completion, so newly added .ini files show
+# up without restarting the shell:
+#   - shipped themes:  $FAST_BASE_DIR/themes/*.ini        -> `name`
+#   - your themes:     ${XDG_CONFIG_HOME:-~/.config}/fsh/*.ini -> `XDG:name`
+#   - any .ini file by path, once the word looks like a path (/, ./, ~)
+
+local curcontext=$curcontext state line ret=1
+typeset -A opt_args
+
+_arguments -s -S -C : \
+  '(- :)'{-h,--help}'[display help text]' \
+  '(- :)'{-l,--list}'[list available themes]' \
+  '(- :)'{-r,--reset}'[unset any theme (revert to default highlighting)]' \
+  '(- :)'{-R,--ov-reset}'[unset overlay, use styles only from main theme]' \
+  '(- :)'{-s,--show}'[display the theme currently set]' \
+  '(- :)'{-p,--palette}'[print all 256 colors and exit]' \
+  '(- :)'{-w,--workdir}'[cd into $FAST_WORK_DIR]' \
+  '(-q --quiet)'{-v,--verbose}'[more messages during operation]' \
+  '(-v --verbose)'{-q,--quiet}'[no default messages]' \
+  '(-t --test)'{-t,--test}'[show example code after switching theme]' \
+  '--secondary[set the theme as the secondary theme]' \
+  '(-v --verbose -q --quiet -t --test --secondary)--copy-shipped-theme[copy a shipped theme as a template for your own]:shipped theme:->shipped' \
+  ':theme name or path:->theme' \
+  && ret=0
+
+# mark the active theme in the listing
+_shellenv_fast_theme_add() {  # <tag> <description> <name-prefix> <ini files...>
+  local tag=$1 descr=$2 prefix=$3 f name
+  shift 3
+  local -a entries
+  for f in "$@"; do
+    name=$prefix${f:t:r}
+    name=${name//:/\\:}
+    [[ ${f:t:r} == $FAST_THEME_NAME || $name == ${FAST_THEME_NAME//:/\\:} ]] && name+=':(current)'
+    entries+=("$name")
+  done
+  (( $#entries )) && _describe -t $tag $descr entries
+}
+
+case $state in
+  shipped)
+    _shellenv_fast_theme_add shipped-themes 'shipped theme' '' $FAST_BASE_DIR/themes/*.ini(N) && ret=0
+    ;;
+  theme)
+    # --copy-shipped-theme takes a destination path as its second argument
+    if (( ${+opt_args[--copy-shipped-theme]} )); then
+      _files && ret=0
+    elif [[ $PREFIX == (/|./|../|\~)* ]]; then
+      _files -g '*.ini(-.)' && ret=0
+    else
+      _tags shipped-themes user-themes
+      while _tags; do
+        _requested shipped-themes &&
+          _shellenv_fast_theme_add shipped-themes 'shipped theme' '' \
+            $FAST_BASE_DIR/themes/*.ini(N) && ret=0
+        _requested user-themes &&
+          _shellenv_fast_theme_add user-themes 'your theme' 'XDG:' \
+            ${XDG_CONFIG_HOME:-$HOME/.config}/fsh/*.ini(N) && ret=0
+        (( ret )) || break
+      done
+    fi
+    ;;
+esac
+
+return ret

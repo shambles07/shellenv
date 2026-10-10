@@ -26,6 +26,16 @@ if (( ${plugins[(Ie)tmux]} )); then
   unalias tmux 2>/dev/null
 fi
 
+# fast-syntax-highlighting: complete theme names for `fast-theme` (the shipped
+# completion lists none), with an arrow-key selectable menu
+if (( ${plugins[(Ie)fast-syntax-highlighting]} )); then
+  autoload -Uz _shellenv_fast-theme
+  compdef _shellenv_fast-theme fast-theme
+  zstyle ':completion:*:*:fast-theme:*' menu select
+  zstyle ':completion:*:*:fast-theme:*' group-name ''
+  zstyle ':completion:*:*:fast-theme:*:descriptions' format '%B-- %d --%b'
+fi
+
 # globalias: only expand when the word left of the cursor looks like a global
 # alias (all caps/digits, e.g. `H`, `RNS`, `VLA`), not on every space.
 if (( ${plugins[(Ie)globalias]} )); then
