@@ -132,6 +132,11 @@ create_homedirs() {
 # also adds the aliases "my" and "myd" for mysql / mysqldump
 mycnf() {
     local hostname cnf db pass MAJOR_VERSION ANS
+    # FusionPBX uses PostgreSQL: point `my` at psql instead of creating a my.cnf
+    if [[ -d /etc/fusionpbx ]]; then
+        _mycnf_fusionpbx
+        return
+    fi
     hostname="$(hostname -s)"
     cnf="$HOME/documents/$hostname.cnf"
     printf "\nCreating file %s for automated mysql authentication\n\n" "$cnf"
@@ -191,6 +196,66 @@ EOF
 	# view aliases
     alias my
     alias myd
+}
+
+# _mycnf_fusionpbx: set alias `my` to the FusionPBX psql shell, used by mycnf.
+# Replaces the line that defines the currently loaded `my` alias; when `my`
+# isn't defined (or its definition can't be found), appends it to zsh_aliases.
+_mycnf_fusionpbx() {
+    setopt local_options extended_glob
+    local new_value='sudo -iu postgres psql -d fusionpbx'
+    local new_line="alias my='$new_value'"
+    local aliases_file=$SHELLENV/zsh/zsh_aliases
+    local file line i indent
+    local -a lines matches
+
+    if [[ ${aliases[my]-} == "$new_value" ]]; then
+        print "Alias my is already set for FusionPBX"
+        alias my
+        return 0
+    fi
+
+    # find the line that defines the loaded alias: evaluate each `alias my=`
+    # line in a subshell and compare the result with the current value
+    if (( $+aliases[my] )); then
+        for file in $aliases_file $SHELLENV/zsh/zshrc $ZSH_CUSTOM/*.zsh(N); do
+            lines=("${(@f)$(<$file)}")
+            for (( i = 1; i <= $#lines; i++ )); do
+                line=$lines[i]
+                [[ $line == [[:space:]]#alias[[:space:]]##my=* ]] || continue
+                if [[ "$(eval "$line" 2>/dev/null; print -r -- ${aliases[my]-})" == "${aliases[my]}" ]]; then
+                    matches+=("$file:$i")
+                fi
+            done
+        done
+    fi
+
+    if (( $#matches )); then
+        local match
+        for match in $matches; do
+            file=${match%:*}; i=${match##*:}
+            lines=("${(@f)$(<$file)}")
+            indent=${(M)lines[i]##[[:space:]]#}
+            print -r -- "Replacing alias my in ${file/#$HOME/~}, line $i:"
+            print -r -- "  - ${lines[i]##[[:space:]]#}"
+            print -r -- "  + $new_line"
+            lines[i]=$indent$new_line
+            print -rl -- "${lines[@]}" > $file
+        done
+    else
+        local guarded="[[ -d /etc/fusionpbx ]] && $new_line"
+        if (( $+aliases[my] )); then
+            print -r -- "Alias my is defined outside of the shellenv files, overriding it in ${aliases_file/#$HOME/~}"
+        else
+            print -r -- "Alias my is not defined, adding it to ${aliases_file/#$HOME/~}"
+        fi
+        if ! command grep -qxF -- "$guarded" $aliases_file; then
+            print -rl -- "# FusionPBX database shell (added by mycnf)" "$guarded" >> $aliases_file
+        fi
+    fi
+
+    alias my="$new_value"
+    alias my
 }
 
 ###### TMUX HELPER FUNCTIONS #####
