@@ -2,8 +2,11 @@
 set nocompatible
 syntax on
 filetype off
-" plugins are git submodules in ~/.vim/bundle: only load the ones checked out
-let s:bundle = expand('~/.vim/bundle')
+" location of this repo, found by resolving the ~/.vimrc symlink, so plugins
+" load from the repo even if ~/.vim isn't linked to it
+let s:shellenv = fnamemodify(resolve(expand('<sfile>:p')), ':h')
+" plugins are git submodules in .vim/bundle: only load the ones checked out
+let s:bundle = s:shellenv . '/.vim/bundle'
 if isdirectory(s:bundle . '/Vundle.vim')
 	let &rtp .= ',' . s:bundle . '/Vundle.vim'
 	call vundle#begin(s:bundle)
@@ -29,12 +32,16 @@ set sw=4
 set tabstop=4
 set ignorecase
 
-" Use persistent history.
-if !isdirectory("/tmp/.vim-undo-dir")
-    call mkdir("/tmp/.vim-undo-dir", "", 0700)
+" Use persistent history, kept per user: a shared directory in /tmp is unusable
+" by everyone else once one user (e.g. root via sudo) has created it
+if has('persistent_undo')
+    let s:undodir = (empty($XDG_STATE_HOME) ? $HOME . '/.local/state' : $XDG_STATE_HOME) . '/vim/undo'
+    if !isdirectory(s:undodir)
+        call mkdir(s:undodir, 'p', 0700)
+    endif
+    let &undodir = s:undodir
+    set undofile
 endif
-set undodir=/tmp/.vim-undo-dir
-set undofile
 
 " Ctrl+m = Toggle line numbers
 map <C-m> :set nu!<CR>

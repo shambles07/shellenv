@@ -14,8 +14,10 @@
 # pass 1: source the upstream template, then this file again (pass 2) so the
 # settings below take precedence. Both run as one command chain because a plain
 # `run ... source` finishes asynchronously, after the rest of this file.
+# The repo is found from the ~/.tmux.conf.local link; plain `readlink` is the
+# fallback for macOS before 12.3, which has no `readlink -f`.
 %if #{==:#{@shellenv_pass2},}
-run '"$TMUX_PROGRAM" -S "#{socket_path}" set -g @shellenv_pass2 1 \; source "$(dirname "$(readlink -f "$TMUX_CONF_LOCAL")")/.tmux/.tmux.conf.local" \; source "$TMUX_CONF_LOCAL" \; set -gu @shellenv_pass2'
+run '"$TMUX_PROGRAM" -S "#{socket_path}" set -g @shellenv_pass2 1 \; source "$(dirname "$(readlink -f "$TMUX_CONF_LOCAL" 2>/dev/null || readlink "$TMUX_CONF_LOCAL" || echo "$TMUX_CONF_LOCAL")")/.tmux/.tmux.conf.local" \; source "$TMUX_CONF_LOCAL" \; set -gu @shellenv_pass2'
 %else
 
 

@@ -5,13 +5,14 @@ zsh / oh-my-zsh, tmux (Oh my tmux!) and vim configuration.
 ## Install
 
 ```sh
-git clone --recurse-submodules <url> ~/shellenv
-~/shellenv/install.sh
+git clone --recurse-submodules <url> ~/.shellenv
+~/.shellenv/install.sh
 ```
 
 `install.sh` only creates these links in `$HOME`; everything else is loaded
 straight from the repo. Anything already at one of these paths is renamed to
-`<name>.orig.<timestamp>`, never deleted.
+`<name>.orig.<timestamp>`, never deleted. zsh, vim and tmux find the repo by
+resolving these links, so nothing depends on the clone being at `~/.shellenv`.
 
 | `$HOME`             | repo                                     |
 | ------------------- | ---------------------------------------- |
@@ -20,6 +21,21 @@ straight from the repo. Anything already at one of these paths is renamed to
 | `~/.vim`            | `.vim`                                   |
 | `~/.tmux.conf`      | `.tmux.conf` (links to `.tmux/.tmux.conf`) |
 | `~/.tmux.conf.local`| `.tmux.conf.local`                       |
+
+tmux also loads `~/.config/tmux/tmux.conf` when it exists, on top of
+`~/.tmux.conf`, so `install.sh` moves that file aside the same way.
+
+### Moving an existing install
+
+To move a checkout from `~/shellenv` to `~/.shellenv`:
+
+```sh
+mv ~/shellenv ~/.shellenv
+~/.shellenv/install.sh
+```
+
+Links that point into the old location (or that the move left dangling) are
+replaced without a backup. Restart running tmux servers and vim sessions.
 
 ## Layout
 
@@ -46,7 +62,12 @@ all local customizations live in tracked files outside them:
 
 `./archive.sh` writes `shellenv.tar.gz` (git-ignored) to the repo root: the
 entire repo, including submodules, hidden files and `.git`, under a single
-top-level `shellenv/` directory.
+top-level directory named after the checkout (`.shellenv/`). To install from it:
+
+```sh
+tar -xzf shellenv.tar.gz -C ~
+~/.shellenv/install.sh
+```
 
 ## Updating
 
