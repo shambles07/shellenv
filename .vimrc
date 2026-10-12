@@ -17,6 +17,10 @@ if isdirectory(s:bundle . '/Vundle.vim')
 		\ 'tpope/vim-fugitive',
 		\ 'fatih/vim-go',
 		\ ]
+		" vim-go warns and pauses on every start in vims older than it supports
+		if s:plugin ==# 'fatih/vim-go' && !has('patch-8.2.5072')
+			continue
+		endif
 		if isdirectory(s:bundle . '/' . fnamemodify(s:plugin, ':t'))
 			execute 'Plugin' string(s:plugin)
 		endif
@@ -43,8 +47,9 @@ if has('persistent_undo')
     set undofile
 endif
 
-" Ctrl+m = Toggle line numbers
-map <C-m> :set nu!<CR>
+" <leader>n (backslash, then n) = Toggle line numbers
+" (not Ctrl+m: terminals send that for Enter, which would break Enter in vim)
+map <leader>n :set nu!<CR>
 " Ctrl+n = Toggle relative line numbers
 map <C-n> :set rnu!<CR>
 

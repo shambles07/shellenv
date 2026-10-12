@@ -21,8 +21,28 @@ backup() {
     mv -v "$1" "$1.orig.$STAMP"
 }
 
+# version_ge <have> <need>: dotted version comparison; trailing letters
+# (tmux 3.3a) are ignored
+version_ge() {
+    awk -v a="$1" -v b="$2" 'BEGIN {
+        n = split(a, x, "."); m = split(b, y, ".")
+        for (i = 1; i <= (n > m ? n : m); i++) {
+            if (x[i] + 0 > y[i] + 0) exit 0
+            if (x[i] + 0 < y[i] + 0) exit 1
+        }
+        exit 0
+    }'
+}
+
+WARNINGS=0
+warn() {
+    echo "warning: $*" >&2
+    WARNINGS=$((WARNINGS + 1))
+}
+
 echo "==> updating submodules"
-git -C "$SHELLENV" submodule update --init --recursive
+# not `git -C`: git before 1.8.5 (e.g. CentOS 7) doesn't have it
+(cd "$SHELLENV" && git submodule update --init --recursive)
 
 echo "==> linking dotfiles into $HOME"
 for pair in \
@@ -58,4 +78,35 @@ for conf in "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/tmux.conf" "$HOME/.config/tm
     fi
 done
 
-echo "==> done; start a new shell (or run: exec zsh)"
+echo "==> checking versions"
+# minimums: oh-my-zsh prefers zsh 5.0.8, Oh my tmux needs tmux 2.6, vim-go
+# needs vim 8.2.5072 (.vimrc skips it on older vims)
+if command -v zsh >/dev/null 2>&1; then
+    v=$(zsh -c 'echo $ZSH_VERSION')
+    version_ge "$v" 5.0.8 || warn "zsh $v is older than 5.0.8; some oh-my-zsh plugins may not work"
+    case ${SHELL:-} in
+        */zsh) ;;
+        *) echo "note: your login shell is ${SHELL:-unknown}; to switch: chsh -s $(command -v zsh)" ;;
+    esac
+else
+    warn "zsh is not installed; ~/.zshrc won't be used"
+fi
+if command -v tmux >/dev/null 2>&1; then
+    # e.g. "tmux 3.4", "tmux 3.3a", "tmux next-3.5"; development builds ("tmux master") pass
+    v=$(tmux -V | sed -n 's/^[^0-9]*\([0-9][0-9.]*\).*/\1/p')
+    if [ -n "$v" ] && ! version_ge "$v" 2.6; then
+        warn "tmux $v is older than 2.6, which Oh my tmux requires; ~/.tmux.conf will fail to load"
+    fi
+fi
+if command -v vim >/dev/null 2>&1; then
+    # vim-tiny (no +eval) skips the :if line and exits through :cq as well
+    if ! vim -N -es -u NONE -i NONE -c 'if has("patch-8.2.5072") | qa! | endif' -c 'cq' </dev/null >/dev/null 2>&1; then
+        warn "vim is older than 8.2.5072 or lacks +eval (e.g. vim-tiny); vim-go is disabled"
+    fi
+fi
+
+if [ "$WARNINGS" -gt 0 ]; then
+    echo "==> done, with $WARNINGS warning(s) above; start a new shell (or run: exec zsh)"
+else
+    echo "==> done; start a new shell (or run: exec zsh)"
+fi

@@ -14,6 +14,11 @@ straight from the repo. Anything already at one of these paths is renamed to
 `<name>.orig.<timestamp>`, never deleted. zsh, vim and tmux find the repo by
 resolving these links, so nothing depends on the clone being at `~/.shellenv`.
 
+It then checks the installed tools and warns (without failing) about anything
+too old: zsh before 5.0.8, tmux before 2.6 (Oh my tmux's minimum), and vim
+before 8.2.5072 or without `+eval`, such as vim-tiny. On those vims `.vimrc`
+skips vim-go, which would otherwise print an error and pause on every start.
+
 | `$HOME`             | repo                                     |
 | ------------------- | ---------------------------------------- |
 | `~/.zshrc`          | `zsh/zshrc`                              |
