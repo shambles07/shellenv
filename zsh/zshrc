@@ -12,7 +12,7 @@ export VISUAL=/usr/bin/vim
 zstyle ':omz:update' mode disabled
 
 ZSH_THEME="evan"
-plugins=(alias-finder zsh-navigation-tools themes battery common-aliases z sudo history zsh-autosuggestions colored-man-pages colorize fast-syntax-highlighting zsh-completion-generator globalias)
+plugins=(alias-finder zsh-navigation-tools themes battery common-aliases z sudo history zsh-autosuggestions colored-man-pages colorize fast-syntax-highlighting globalias)
 
 # add omz plugin if binary found in $PATH
 add_plugin() {
@@ -25,6 +25,14 @@ add_plugin() {
 if (( $+commands[tmux] )); then plugins+=(tmux tmux-theme); fi
 if (( $+commands[systemctl] )); then plugins+=(systemd); fi
 if (( $+commands[apt] )); then plugins+=(debian); fi
+# zsh-completion-generator runs `python` on startup, which newer systems only
+# ship as python3; without either it would print an error on every start
+if (( $+commands[python3] )); then
+    GENCOMPL_PY=python3
+    plugins+=(zsh-completion-generator)
+elif (( $+commands[python] )); then
+    plugins+=(zsh-completion-generator)
+fi
 add_plugin yum
 add_plugin git
 add_plugin docker

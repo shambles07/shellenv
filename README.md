@@ -74,6 +74,19 @@ tar -xzf shellenv.tar.gz -C ~
 ~/.shellenv/install.sh
 ```
 
+## Testing
+
+```sh
+tests/smoke.sh
+```
+
+Installs into a throwaway `$HOME` and checks that zsh, vim and tmux load the
+config without errors (tools that aren't installed are skipped), that
+`install.sh` backs up, replaces and warns as described above, and that
+`archive.sh` works. CI (`.github/workflows/smoke.yml`) runs it on Ubuntu,
+macOS and Ubuntu 22.04 (older vim, tmux and zsh), plus `shellcheck` on the
+scripts.
+
 ## Updating
 
 ```sh
