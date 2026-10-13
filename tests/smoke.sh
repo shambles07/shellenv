@@ -22,6 +22,11 @@ section() { echo; echo "== $*"; }
 
 cleanup() {
     env HOME="$H" tmux -L "$SOCK" kill-server 2>/dev/null
+    # shells in the killed tmux server may still be writing to $H on exit
+    for _ in 1 2 3 4 5; do
+        rm -rf "${T:?}" 2>/dev/null && return
+        sleep 0.5
+    done
     rm -rf "${T:?}"
 }
 trap cleanup EXIT
@@ -121,7 +126,8 @@ start_tmux() {
     # start outside the repo, so relative paths can't resolve by accident
     (cd "$H" && env HOME="$H" PATH="${2:-$PATH}" tmux -L "$SOCK" new-session -d -s smoke) || { fail "$1: tmux starts"; return 1; }
     for _ in $(seq 1 50); do
-        if tmux -L "$SOCK" list-keys -T prefix X 2>/dev/null | grep -q kill-pane &&
+        # not `list-keys -T prefix X`: tmux 3.7 prints nothing for a single key
+        if tmux -L "$SOCK" list-keys -T prefix 2>/dev/null | grep -Eq ' X +kill-pane$' &&
             [ -z "$(tmux -L "$SOCK" show -gqv @shellenv_pass2)" ]; then
             pass "$1: upstream template and local settings load"
             return 0

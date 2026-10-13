@@ -30,6 +30,10 @@ jobs:
           else
             sudo apt-get update
             sudo apt-get install -y zsh tmux vim
+            # Ubuntu's /etc/zsh/zshrc runs a plain compinit, which stops to
+            # prompt (and aborts without a terminal) when the runner image has
+            # group/world-writable completion directories
+            zsh -fc 'autoload -Uz compaudit; compaudit' 2>/dev/null | xargs -r sudo chmod go-w
           fi
       - run: tests/smoke.sh
 
