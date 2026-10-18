@@ -62,12 +62,40 @@ if [[ -z $TMUX && $TERM == xterm ]]; then
 	export TERM=xterm-256color
 fi
 
-export PATH=$PATH:/sbin:/usr/sbin:$HOME/bin:/usr/local/go/bin
+# PATH/MANPATH: zsh ties these to the $path/$manpath arrays. ${^dirs}(N-/)
+# keeps only entries that exist as directories; -U drops duplicates, keeping
+# the first occurrence
+typeset -U path manpath
+path_dirs=(
+	/sbin
+	/usr/sbin
+	$HOME/bin                                       # custom user binaries
+	$HOME/.local/bin                                # local binaries
+	/usr/local/go/bin                               # Go toolchain
+	$GOPATH/bin                                     # go install binaries
+	/opt/homebrew/bin                               # homebrew binaries
+	${HOMEBREW_PREFIX:-/opt/homebrew}/opt/coreutils/libexec/gnubin  # homebrew gnu coreutils
+	${BUN_INSTALL:-$HOME/.bun}/bin                  # bun binaries
+	/Library/Developer/CommandLineTools/usr/bin     # Xcode binaries
+	/Applications/Cursor.app/Contents/MacOS         # Cursor IDE binaries
+	/Applications/CMake.app/Contents/bin            # CMake to build OrcaSlicer
+)
 # add bin/tools to path for freedom & ptce servers
 if [[ -f /freedom/config/freedomproperties.config ]]; then
-	export PATH=$PATH:/freedom/tools:/freedom/bin
+	path_dirs+=(/freedom/tools /freedom/bin)
 fi
 if [[ -f /ptce/config/ptceproperties.config ]]; then
-	export PATH=$PATH:/ptce/bin:/ptce/tools
+	path_dirs+=(/ptce/bin /ptce/tools)
 fi
-typeset -U path
+path+=(${^path_dirs}(N-/))
+
+manpath_dirs=(
+	${HOMEBREW_PREFIX:-/opt/homebrew}/opt/coreutils/libexec/gnuman
+	/Library/Developer/CommandLineTools/usr/share/man
+	/usr/local/share/man
+)
+# a leading empty MANPATH entry keeps man's default search path
+(( $#manpath )) || manpath=('')
+manpath+=(${^manpath_dirs}(N-/))
+export MANPATH
+unset path_dirs manpath_dirs
