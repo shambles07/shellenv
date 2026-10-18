@@ -45,9 +45,18 @@ all local customizations live in tracked files outside them:
 
 ## Archive
 
-`./archive.sh` writes `shellenv.tar.gz` (git-ignored) to the repo root: the
-entire repo, including submodules, hidden files and `.git`, under a single
-top-level `shellenv/` directory.
+`./archive.sh` writes `shellenv_YYYYmmdd_HHMMSS.tar.gz` (git-ignored) to the
+repo root: the entire repo, including submodules, hidden files and `.git`,
+under a single top-level `shellenv/` directory.
+
+If a local `upload.sh` exists (git-ignored, not included in the archive),
+`archive.sh` runs it with the new archive's path as its only argument, e.g.:
+
+```sh
+#!/bin/sh
+set -eu
+scp "$1" user@host:/path/
+```
 
 ## Updating
 
