@@ -7,6 +7,7 @@
 #   ~/.vim              -> .vim
 #   ~/.tmux.conf        -> .tmux.conf (-> .tmux/.tmux.conf)
 #   ~/.tmux.conf.local  -> .tmux.conf.local
+#   ~/.inputrc          -> .inputrc
 #
 # Anything already at one of those paths (that isn't already our link) is
 # renamed to <name>.orig.<timestamp>, never deleted.
@@ -24,7 +25,8 @@ for pair in \
     .vimrc:.vimrc \
     .vim:.vim \
     .tmux.conf:.tmux.conf \
-    .tmux.conf.local:.tmux.conf.local
+    .tmux.conf.local:.tmux.conf.local \
+    .inputrc:.inputrc
 do
     src=$SHELLENV/${pair%%:*}
     target=$HOME/${pair#*:}

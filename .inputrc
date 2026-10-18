@@ -1,0 +1,41 @@
+# Readline config (bash, python, psql, mysql, ...). Linked to ~/.inputrc by install.sh.
+$include /etc/inputrc
+
+# --- word movement ---------------------------------------------------------
+# Esc-f / Esc-b (and Option-f/b when the terminal sends Meta).
+"\ef": forward-word
+"\eb": backward-word
+# Option-f / Option-b when the macOS terminal sends the literal character.
+"ƒ": forward-word
+"∫": backward-word
+
+# --- completion ------------------------------------------------------------
+set completion-ignore-case on
+# Treat - and _ as equivalent when completing.
+set completion-map-case on
+# List all matches on the first Tab instead of ringing the bell.
+set show-all-if-ambiguous on
+# Color matches like ls, and append type indicators (/ @ * ...).
+set colored-stats on
+set visible-stats on
+set mark-symlinked-directories on
+# Highlight the common prefix of the matches.
+set colored-completion-prefix on
+# Don't duplicate text already after the cursor when completing mid-word.
+set skip-completed-text on
+# Only ask "Display all N possibilities?" for really long lists.
+set completion-query-items 200
+
+# --- history ---------------------------------------------------------------
+# Up/Down search history for lines starting with what's already typed.
+"\e[A": history-search-backward
+"\e[B": history-search-forward
+"\eOA": history-search-backward
+"\eOB": history-search-forward
+
+# --- misc ------------------------------------------------------------------
+set bell-style none
+# Don't let 8-bit input/output get mangled.
+set input-meta on
+set output-meta on
+set convert-meta off

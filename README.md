@@ -20,6 +20,7 @@ straight from the repo. Anything already at one of these paths is renamed to
 | `~/.vim`            | `.vim`                                   |
 | `~/.tmux.conf`      | `.tmux.conf` (links to `.tmux/.tmux.conf`) |
 | `~/.tmux.conf.local`| `.tmux.conf.local`                       |
+| `~/.inputrc`        | `.inputrc`                               |
 
 ## Layout
 
