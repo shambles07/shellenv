@@ -91,5 +91,14 @@ if [ -f "$HOME/documents/$_hostname.cnf" ]; then
 		alias myd="mysqldump --defaults-extra-file=~/documents/$_hostname.cnf ptceDB"
 	fi
 fi
+# FusionPBX/Nexus database shells; myn only when exactly one nexus_ database (besides nexus_master) exists
+if [[ -d /var/www/fusionpbx/app/nexus_fusion ]]; then
+	alias my='sudo -iu postgres psql -d fusionpbx'
+	_nexus_dbs=(${(f)"$(sudo -n -iu postgres psql -XAtqc "SELECT datname FROM pg_database WHERE datname ~ '^nexus_' AND datname <> 'nexus_master'" 2>/dev/null)"})
+	if (( $#_nexus_dbs == 1 )); then
+		alias myn="sudo -iu postgres psql -d ${_nexus_dbs[1]}"
+	fi
+	unset _nexus_dbs
+fi
 # stash away (discard) current changes; drops only that stash, not the whole list
 alias gsss='git stash && git stash drop'

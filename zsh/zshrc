@@ -62,11 +62,12 @@ if [[ -z $TMUX && $TERM == xterm ]]; then
 	export TERM=xterm-256color
 fi
 
+export PATH=$PATH:/sbin:/usr/sbin:$HOME/bin:/usr/local/go/bin
 # add bin/tools to path for freedom & ptce servers
-hostn=${HOST%%.*}
-if [[ "$hostn" =~ (ptce|freedom) ]]; then
-	export PATH=$PATH:/sbin:/usr/sbin:$HOME/bin:/usr/local/go/bin:/$hostn/bin:/$hostn/tools
-else
-	export PATH=$PATH:/sbin:/usr/sbin:$HOME/bin:/usr/local/go/bin
+if [[ -f /freedom/config/freedomproperties.config ]]; then
+	export PATH=$PATH:/freedom/tools:/freedom/bin
+fi
+if [[ -f /ptce/config/ptceproperties.config ]]; then
+	export PATH=$PATH:/ptce/bin:/ptce/tools
 fi
 typeset -U path
