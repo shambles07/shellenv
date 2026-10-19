@@ -12,7 +12,6 @@ if isdirectory(s:bundle . '/Vundle.vim')
 		\ 'ParamagicDev/vim-medic_chalk',
 		\ 'christoomey/vim-tmux-navigator',
 		\ 'tpope/vim-fugitive',
-		\ 'fatih/vim-go',
 		\ ]
 		if isdirectory(s:bundle . '/' . fnamemodify(s:plugin, ':t'))
 			execute 'Plugin' string(s:plugin)

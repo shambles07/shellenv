@@ -10,10 +10,6 @@
 	path = .vim/bundle/vim-fugitive
 	url = https://github.com/tpope/vim-fugitive.git
 	branch = master
-[submodule ".vim/bundle/vim-go"]
-	path = .vim/bundle/vim-go
-	url = https://github.com/fatih/vim-go.git
-	branch = master
 [submodule ".vim/bundle/vim-medic_chalk"]
 	path = .vim/bundle/vim-medic_chalk
 	url = https://github.com/ParamagicDev/vim-medic_chalk.git
