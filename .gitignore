@@ -4,3 +4,4 @@
 shellenv*.tar.gz
 shellenv*.tar.gz.tmp
 upload.sh
+archives/
