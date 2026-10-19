@@ -12,10 +12,15 @@
 # -- upstream defaults ---------------------------------------------------------
 
 # pass 1: source the upstream template, then this file again (pass 2) so the
-# settings below take precedence. Both run as one command chain because a plain
+# settings below take precedence. All run as one command chain because a plain
 # `run ... source` finishes asynchronously, after the rest of this file.
+#
+# Between them, tmux/theme.conf (written by tmux/tmux-colors, optional) overrides
+# tmux_conf_theme_colour_N. tmux expands "$var" when a line is parsed, so the
+# template lines that derive settings from those colours are then re-read from
+# stdin (source -) to pick up the new values.
 %if #{==:#{@shellenv_pass2},}
-run '"$TMUX_PROGRAM" -S "#{socket_path}" set -g @shellenv_pass2 1 \; source "$(dirname "$(readlink -f "$TMUX_CONF_LOCAL")")/.tmux/.tmux.conf.local" \; source "$TMUX_CONF_LOCAL" \; set -gu @shellenv_pass2'
+run 'r="$(dirname "$(readlink -f "$TMUX_CONF_LOCAL")")"; grep -E "^[[:space:]]*tmux_conf_theme_[a-z0-9_]+=.*[\$]tmux_conf_theme_colour_" "$r/.tmux/.tmux.conf.local" | "$TMUX_PROGRAM" -S "#{socket_path}" set -g @shellenv_pass2 1 \; source "$r/.tmux/.tmux.conf.local" \; source -q "$r/tmux/theme.conf" \; source - \; source "$TMUX_CONF_LOCAL" \; set -gu @shellenv_pass2'
 %else
 
 
@@ -28,8 +33,8 @@ tmux_conf_theme_window_status_current_format="#I #W#{?#{||:#{window_bell_flag},#
 
 # -- general -------------------------------------------------------------------
 
-# default shell: zsh when installed, otherwise bash
-run '"$TMUX_PROGRAM" -S "#{socket_path}" set -g default-shell "$(command -v zsh || command -v bash || echo /bin/sh)"'
+# default shell: /bin/zsh when present, else zsh from PATH, otherwise bash
+run '"$TMUX_PROGRAM" -S "#{socket_path}" set -g default-shell "$( { [ -x /bin/zsh ] && echo /bin/zsh; } || command -v zsh || command -v bash || echo /bin/sh)"'
 
 # only use C-b as prefix (drop the GNU-Screen compatible C-a)
 set -gu prefix2
@@ -66,6 +71,24 @@ bind -n C-S-Up    switch-client -p
 bind -n C-S-Down  switch-client -n
 
 %endif
+
+
+# -- plugins -------------------------------------------------------------------
+
+# installed and updated by Oh my tmux!'s tpm integration (<prefix> I / u), which
+# finds @plugin lines by parsing this file: keep them outside the %if above
+set -g @plugin 'b0o/tmux-autoreload'        # reload config on save (needs entr)
+set -g @plugin 'kristopolous/tmux-gentrify' # <prefix> M-x cut pane, M-v paste it
+set -g @plugin 'rickstaa/tmux-notify'       # <prefix> m notify when pane is done
+                                            #   (replaces <prefix> m mouse toggle)
+
+# Oh my tmux! only applies settings when the main config is sourced, so reload
+# through it whenever any loaded config file changes
+set -g @tmux-autoreload-entrypoints 1
+# #{config_files} only lists the main config: also watch this file and
+# tmux/theme.conf when present (entr fails on missing files). Without entr,
+# stay quiet instead of showing a startup error on every host lacking it.
+run 'r="$(dirname "$(readlink -f "$TMUX_CONF_LOCAL")")"; configs="$TMUX_CONF_LOCAL"; [ -f "$r/tmux/theme.conf" ] && configs="$configs,$r/tmux/theme.conf"; "$TMUX_PROGRAM" -S "#{socket_path}" set -g @tmux-autoreload-configs "$configs"; command -v entr >/dev/null || "$TMUX_PROGRAM" -S "#{socket_path}" set -g @tmux-autoreload-quiet 1'
 
 
 # -- custom variables ----------------------------------------------------------

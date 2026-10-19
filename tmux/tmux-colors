@@ -1,0 +1,252 @@
+#!/usr/bin/env zsh
+# tmux-colors: pick the Oh my tmux! theme colours (tmux_conf_theme_colour_1..17)
+# from a palette, previewing the status bar as you go, then save them to
+# tmux/theme.conf, which .tmux.conf.local loads after the upstream template.
+# Uses fzf when installed, otherwise a numbered menu.
+emulate -L zsh
+setopt extended_glob
+
+self=${0:A}
+theme_file=${self:h}/theme.conf
+template=${self:h:h}/.tmux/.tmux.conf.local
+
+roles=(
+	'status bar background; current window text; message text'
+	'pane border; last window background'
+	'window text'
+	'current window background; active pane border; last window text; clock'
+	'message background; bell; command prompt text'
+	'status-left section 1 text'
+	'status-left section 2 text'
+	'status-left section 3 text'
+	'status-left section 1 background'
+	'status-left section 2 background'
+	'status-left section 3 background'
+	'status-right section 1 text'
+	'status-right section 2 text'
+	'status-right section 3 text'
+	'status-right section 1 background'
+	'status-right section 2 background'
+	'status-right section 3 background'
+)
+
+palette=(
+	'default terminal default'
+	'#000000 black'          '#080808 near black'      '#1c1c1c charcoal'
+	'#303030 dark gray'      '#444444 slate'           '#585858 gray'
+	'#8a8a8a light gray'     '#bcbcbc silver'          '#e4e4e4 off white'
+	'#ffffff white'          '#d70000 red'             '#ff5f5f light red'
+	'#ff8700 orange'         '#ffaf00 amber'           '#d7af00 gold'
+	'#ffff00 yellow'         '#5fff00 lime'            '#00af00 green'
+	'#005f00 forest'         '#00afaf teal'            '#00ffff cyan'
+	'#00afff light blue'     '#0087ff blue'            '#00005f navy'
+	'#5f00af indigo'         '#8700ff purple'          '#af87ff violet'
+	'#ff00ff magenta'        '#ff00af pink'            '#ff87af rose'
+	'#875f00 brown'
+	'#282a36 dracula bg'     '#44475a dracula line'    '#f8f8f2 dracula fg'
+	'#bd93f9 dracula purple' '#ff79c6 dracula pink'    '#50fa7b dracula green'
+	'#8be9fd dracula cyan'   '#ffb86c dracula orange'  '#ff5555 dracula red'
+	'#f1fa8c dracula yellow'
+	'#2e3440 nord bg'        '#3b4252 nord line'       '#eceff4 nord fg'
+	'#88c0d0 nord frost'     '#81a1c1 nord blue'       '#5e81ac nord deep blue'
+	'#bf616a nord red'       '#d08770 nord orange'     '#ebcb8b nord yellow'
+	'#a3be8c nord green'     '#b48ead nord purple'
+	'#282828 gruvbox bg'     '#3c3836 gruvbox line'    '#ebdbb2 gruvbox fg'
+	'#fb4934 gruvbox red'    '#b8bb26 gruvbox green'   '#fabd2f gruvbox yellow'
+	'#83a598 gruvbox blue'   '#d3869b gruvbox purple'  '#8ec07c gruvbox aqua'
+	'#fe8019 gruvbox orange'
+	'#002b36 solarized bg'   '#073642 solarized line'  '#93a1a1 solarized fg'
+	'#268bd2 solarized blue' '#2aa198 solarized cyan'  '#859900 solarized green'
+	'#b58900 solarized yellow' '#cb4b16 solarized orange' '#dc322f solarized red'
+	'#d33682 solarized magenta' '#6c71c4 solarized violet'
+	'#1e1e2e catppuccin bg'  '#313244 catppuccin line' '#cdd6f4 catppuccin fg'
+	'#cba6f7 catppuccin mauve' '#89b4fa catppuccin blue' '#a6e3a1 catppuccin green'
+	'#fab387 catppuccin peach' '#f38ba8 catppuccin red' '#f9e2af catppuccin yellow'
+	'#94e2d5 catppuccin teal'
+	'#1a1b26 tokyo night bg' '#7aa2f7 tokyo night blue' '#bb9af7 tokyo night purple'
+	'#9ece6a tokyo night green' '#e0af68 tokyo night yellow' '#f7768e tokyo night red'
+)
+
+# load FILE: read tmux_conf_theme_colour_N="value" lines into $colours
+load() {
+	local line
+	[[ -r $1 ]] || return 0
+	while IFS= read -r line; do
+		[[ $line == (#b)[[:space:]]#tmux_conf_theme_colour_([0-9]##)=\"([^\"]#)\"* ]] &&
+			colours[$match[1]]=$match[2]
+	done < $1
+}
+
+is_colour() {
+	[[ $1 == (\#[[:xdigit:]](#c6)|colou#r<0-255>|default) ]]
+}
+
+# sgr fg|bg VALUE: SGR parameters for a tmux colour value
+sgr() {
+	local base=38
+	[[ $1 == bg ]] && base=48
+	case $2 in
+		(\#[[:xdigit:]](#c6)) print -n "$base;2;$((16#${2[2,3]}));$((16#${2[4,5]}));$((16#${2[6,7]}))" ;;
+		(colou#r<0-255>) print -n "$base;5;${2##*[^0-9]}" ;;
+		(*) print -n $((base + 1)) ;;
+	esac
+}
+
+# seg FG BG ATTR TEXT: print TEXT in the given colours
+seg() {
+	local bold=
+	[[ $3 == bold ]] && bold='1;'
+	print -rn -- $'\e[0;'"$bold$(sgr fg $1);$(sgr bg $2)m$4"$'\e[0m'
+}
+
+swatch() {
+	seg default $1 none '      '
+}
+
+# render [SLOT]: mock Oh my tmux! status bar and messages in the current colours
+render() {
+	local -a c=($colours)
+	local cols=${FZF_PREVIEW_COLUMNS:-${COLUMNS:-80}}
+	local left=' ❐ main | ↑ 3d 4h ' windows=' 1 zsh  2 vim  3 logs  4 build! '
+	local now=$(date +%H:%M)
+	local r1=' ⌨ ' r2=" $now " r3=" $(date '+%d %b') | ${USER:-$(id -un)} | ${HOST%%.*} "
+	local fill=$(( cols - ${#left} - ${#windows} - ${#r1} - ${#r2} - ${#r3} ))
+	(( fill < 1 )) && fill=1
+
+	print
+	seg $c[6] $c[9] bold $left
+	seg $c[3] $c[1] none ' 1 zsh '
+	seg $c[1] $c[4] bold ' 2 vim '
+	seg $c[4] $c[2] none ' 3 logs '
+	seg $c[5] $c[1] bold ' 4 build! '
+	seg $c[3] $c[1] none "${(l:fill:: :)}"
+	seg $c[12] $c[15] none $r1
+	seg $c[13] $c[16] none $r2
+	seg $c[14] $c[17] bold $r3
+	print '\n'
+	print -n '  status-left sections 2/3 (used when status_left has commas): '
+	seg $c[7] $c[10] none ' section 2 '
+	seg $c[8] $c[11] none ' section 3 '
+	print '\n'
+	print -n '  pane borders: '
+	seg $c[2] default none '────── inactive'
+	print -n '   '
+	seg $c[4] default none '────── active'
+	print -n '   clock: '
+	seg $c[4] default bold $now
+	print '\n'
+	print -n '  messages: '
+	seg $c[1] $c[5] none ' Configuration reloaded '
+	print -n ' '
+	seg $c[5] $c[1] none ' :command prompt '
+	print -n ' '
+	seg $c[1] $c[5] none ' [3/120] copy mode '
+	print
+	if [[ -n $1 ]]; then
+		print "\n  colour $1: $roles[$1]"
+	fi
+}
+
+# choose HEADER PREVIEW LINE...: print the chosen line, or what was typed when
+# it matches no line (used for custom #rrggbb values)
+choose() {
+	local header=$1 preview=$2 reply i
+	shift 2
+	if (( $+commands[fzf] )); then
+		print -rl -- "$@" | fzf --ansi --reverse --no-sort --header "$header" \
+			--preview "$preview" --preview-window down,12 \
+			--bind 'enter:accept-or-print-query'
+		return
+	fi
+	# the menu goes to stderr: stdout is the reply, captured by the caller
+	{
+		clear
+		render
+		print "\n$header\n"
+		for i in {1..$#}; do
+			print -r -- "$(printf '%3d) ' $i)${@[i]}"
+		done
+		print
+	} >&2
+	read -r 'reply?number (or #rrggbb, empty to go back): ' || return 1
+	[[ -n $reply ]] || return 1
+	if [[ $reply == <1-> ]] && (( reply <= $# )); then
+		print -r -- ${@[reply]}
+	else
+		print -r -- $reply
+	fi
+}
+
+# pick SLOT: choose a palette colour (or a typed one) for SLOT
+pick() {
+	local entry value lines=()
+	for entry in $palette; do
+		lines+=("${(r:8:)${entry%% *}} $(swatch ${entry%% *}) ${entry#* }")
+	done
+	value=$(choose "colour $1: $roles[$1]   (type #rrggbb for a custom colour)" \
+		"${(q)self} --preview $1 {1} {q}" $lines) || return 0
+	value=${value%% *}
+	if is_colour $value; then
+		colours[$1]=${(L)value}
+	else
+		print "not a colour: $value (use #rrggbb, colourN or default)" >&2
+		sleep 2
+	fi
+}
+
+save() {
+	local i conf
+	{
+		print '# generated by tmux/tmux-colors: Oh my tmux! theme colours, loaded by'
+		print '# .tmux.conf.local after the upstream template. Rerun tmux-colors to change.'
+		for i in {1..17}; do
+			print -r -- "tmux_conf_theme_colour_$i=\"$colours[i]\""
+		done
+	} > $theme_file
+	print "saved $theme_file"
+	if tmux has-session 2>/dev/null; then
+		conf=$(tmux show-environment -g TMUX_CONF 2>/dev/null)
+		tmux source-file "${${conf#*=}:-$HOME/.tmux.conf}" \; display 'tmux-colors: theme applied'
+	fi
+}
+
+colours=()
+load $template
+defaults=($colours)
+load $theme_file
+
+# preview mode, run by fzf: --preview [SLOT [VALUE [TYPED]]]
+if [[ $1 == --preview ]]; then
+	colours=(${=TMUX_COLOURS:-$colours})
+	if [[ -n $2 ]]; then
+		value=${3:-$4}
+		is_colour $value && colours[$2]=$value
+	fi
+	render $2
+	exit 0
+fi
+
+if (( $#defaults != 17 )); then
+	print "tmux-colors: could not read the default colours from $template" >&2
+	exit 1
+fi
+
+while true; do
+	export TMUX_COLOURS=${(j: :)colours}
+	lines=()
+	for i in {1..17}; do
+		lines+=("${(r:7:):-$i} $(swatch $colours[i]) ${(r:8:)colours[i]} $roles[i]")
+	done
+	lines+=(
+		'save    write the colours to tmux/theme.conf and reload tmux'
+		'reset   go back to the Oh my tmux! default colours'
+		'quit    exit without saving'
+	)
+	choice=$(choose 'tmux-colors: pick a colour to change' "${(q)self} --preview" $lines) || break
+	case ${choice%% *} in
+		(<1-17>) pick ${choice%% *} ;;
+		(save) save; break ;;
+		(reset) colours=($defaults) ;;
+		(*) break ;;
+	esac
+done

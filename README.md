@@ -40,7 +40,15 @@ all local customizations live in tracked files outside them:
 - `zsh-custom/themes/` – theme wrappers that source the upstream theme, then adjust it
 - `zsh-custom/plugins/{nginx,tmux-theme}` – local plugins
 - `.tmux.conf.local` – loads the upstream template from `.tmux/.tmux.conf.local`,
-  then applies only the local settings, so new upstream options arrive with updates
+  then applies only the local settings, so new upstream options arrive with updates.
+  tpm plugins (installed on tmux start by Oh my tmux!; `<prefix> I` / `u`):
+  - [tmux-autoreload](https://github.com/b0o/tmux-autoreload) – reloads the config on save; needs `entr`
+  - [tmux-gentrify](https://github.com/kristopolous/tmux-gentrify) – `<prefix> M-x` cuts a pane, `M-v` pastes it
+  - [tmux-notify](https://github.com/rickstaa/tmux-notify) – `<prefix> m` notifies when a pane's command finishes
+    (replaces Oh my tmux!'s `<prefix> m` mouse toggle)
+- `tmux/tmux-colors` (alias `tmuxtheme`) – picks the Oh my tmux! theme colours from
+  a palette with a live preview of the status bar (fzf if installed, otherwise a
+  numbered menu), saves them to `tmux/theme.conf` and reloads tmux
 - `.vimrc` – Vundle plugins are only registered when their directory exists
 
 ## Archive

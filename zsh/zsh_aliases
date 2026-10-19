@@ -57,7 +57,7 @@ alias vmux='vim ~/.tmux.conf'
 alias vmuxl='vim ~/.tmux.conf.local'
 # TMUX ALIASES
 alias tso='tmux source-file'
-alias tmuxtheme='zsh $HOME/bin/tmux-theme-chooser'
+alias tmuxtheme='$SHELLENV/tmux/tmux-colors'
 # GLOBAL
 alias -g RNS='| sort -nr'
 alias -g VLA=/var/log/asterisk/full
